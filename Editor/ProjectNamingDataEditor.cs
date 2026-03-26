@@ -74,6 +74,63 @@ public class ProjectNamingDataEditor : Editor
 
         serializedObject.ApplyModifiedProperties();
 
+        // Excluded Folders Section
+        EditorGUILayout.Space(15);
+        EditorGUILayout.LabelField("Excluded Folders", EditorStyles.boldLabel);
+        EditorGUILayout.HelpBox("Assets inside these folders will not be renamed. Drag folders from the Project window or type paths manually (e.g. Assets/Plugins/FMOD).", MessageType.Info);
+        EditorGUILayout.Space(5);
+
+        for (int i = 0; i < _data.excludedFolders.Count; i++)
+        {
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                // Folder object field for drag-and-drop
+                string currentPath = _data.excludedFolders[i];
+                Object folderObj = string.IsNullOrEmpty(currentPath) ? null : AssetDatabase.LoadAssetAtPath<Object>(currentPath);
+                Object newFolderObj = EditorGUILayout.ObjectField(folderObj, typeof(DefaultAsset), false);
+
+                if (newFolderObj != folderObj)
+                {
+                    string newPath = AssetDatabase.GetAssetPath(newFolderObj);
+                    if (AssetDatabase.IsValidFolder(newPath))
+                    {
+                        Undo.RecordObject(_data, "Update Excluded Folder");
+                        _data.excludedFolders[i] = newPath;
+                    }
+                }
+
+                // Also allow manual text editing
+                string manualPath = EditorGUILayout.TextField(currentPath, GUILayout.MinWidth(150));
+                if (manualPath != currentPath)
+                {
+                    Undo.RecordObject(_data, "Update Excluded Folder");
+                    _data.excludedFolders[i] = manualPath;
+                }
+
+                // Delete Button
+                GUI.backgroundColor = new Color(1f, 0.4f, 0.4f);
+                if (GUILayout.Button("X", GUILayout.Width(25)))
+                {
+                    Undo.RecordObject(_data, "Remove Excluded Folder");
+                    _data.excludedFolders.RemoveAt(i);
+                    break;
+                }
+                GUI.backgroundColor = Color.white;
+            }
+        }
+
+        EditorGUILayout.Space(5);
+        using (new EditorGUILayout.HorizontalScope())
+        {
+            GUILayout.FlexibleSpace();
+            if (GUILayout.Button("+ Add Excluded Folder", GUILayout.Width(180), GUILayout.Height(25)))
+            {
+                Undo.RecordObject(_data, "Add Excluded Folder");
+                _data.excludedFolders.Add("");
+            }
+            GUILayout.FlexibleSpace();
+        }
+
         if (GUI.changed)
         {
             EditorUtility.SetDirty(_data);

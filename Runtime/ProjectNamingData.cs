@@ -7,6 +7,7 @@ namespace ProjectNamingTool
     public class ProjectNamingData : ScriptableObject
     {
         public List<NamingRule> rules = new List<NamingRule>();
+        public List<string> excludedFolders = new List<string>();
 
         public void LoadDefaults()
         {

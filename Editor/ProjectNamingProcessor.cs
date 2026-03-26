@@ -34,6 +34,19 @@ namespace ProjectNamingTool
             }
 
             RefreshDictionary(data);
+            _excludedFolders = new List<string>(data.excludedFolders);
+        }
+
+        private static List<string> _excludedFolders = new List<string>();
+
+        private static bool IsExcluded(string path)
+        {
+            foreach (string folder in _excludedFolders)
+            {
+                if (string.IsNullOrEmpty(folder)) continue;
+                if (path.StartsWith(folder, System.StringComparison.OrdinalIgnoreCase)) return true;
+            }
+            return false;
         }
 
         private static void RefreshDictionary(ProjectNamingData data)
@@ -88,6 +101,13 @@ namespace ProjectNamingTool
                     continue;
                 }
 
+                EnsureDataInitialized();
+
+                if (IsExcluded(path))
+                {
+                    continue;
+                }
+
                 Object mainAsset = AssetDatabase.LoadMainAssetAtPath(path);
                 
                 if (mainAsset == null || !AssetDatabase.IsMainAsset(mainAsset))
@@ -97,8 +117,6 @@ namespace ProjectNamingTool
 
                 string ext = Path.GetExtension(path).ToLower();
                 string fileName = Path.GetFileNameWithoutExtension(path);
-
-                EnsureDataInitialized();
 
                 if (_extensionPrefixMap.TryGetValue(ext, out string prefix))
                 {
